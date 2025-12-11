@@ -1,0 +1,1068 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Protein Challenge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Blue/Indigo Theme for Protein */
+            --primary: #4f46e5;       /* Indigo 600 */
+            --primary-light: #e0e7ff; /* Indigo 100 */
+            --primary-dark: #4338ca;  /* Indigo 700 */
+            --accent: #f59e0b;        /* Amber (Win state) */
+            --bg: #f8fafc;            /* Slate 50 */
+            --card: #ffffff;
+            --text: #1e293b;          /* Slate 800 */
+            --text-light: #64748b;    /* Slate 500 */
+            --border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* INSTRUCTIONS BOX (Top) */
+        .instruction-box {
+            background: #eef2ff; /* Very Light Indigo */
+            border-left: 5px solid var(--primary);
+            padding: 15px;
+            margin: 15px 20px 0 20px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #312e81;
+            line-height: 1.5;
+        }
+        .instruction-title {
+            font-weight: 700;
+            margin-bottom: 5px;
+            display: block;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* HEADER & DASHBOARD */
+        .dashboard {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            z-index: 10;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 { margin: 0; font-size: 1.1rem; color: var(--primary); }
+        .subtitle { font-size: 0.8rem; color: var(--text-light); }
+        .edit-goal { font-size: 0.7rem; color: var(--primary); text-decoration: underline; cursor: pointer; margin-left: 5px;}
+
+        /* PROGRESS RING */
+        .progress-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.5s ease-in-out;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        
+        .score-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .score-val { font-size: 1.2rem; font-weight: 700; color: var(--text); line-height: 1; }
+        .score-label { font-size: 0.6rem; color: var(--text-light); }
+
+        /* MAIN CONTENT AREA */
+        .main-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* CATEGORY TABS */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            scrollbar-width: none; 
+        }
+        .tabs::-webkit-scrollbar { display: none; }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: white;
+            color: var(--text-light);
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            border: 1px solid #e5e7eb;
+            font-size: 0.9rem;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* FOOD GRID */
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .food-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 140px;
+        }
+        
+        .food-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-light);
+        }
+
+        .food-emoji { font-size: 2.5rem; margin-bottom: 5px; display: block; }
+        .food-name { font-weight: 600; font-size: 0.9rem; display: block; line-height: 1.2; color: #111; }
+        .tap-hint { font-size: 0.7rem; color: var(--primary); margin-top: 5px; opacity: 0; transition: opacity 0.2s; font-weight: 500; }
+        .food-card:hover .tap-hint { opacity: 1; }
+
+        /* PLATE (Selected Items) */
+        .plate-section {
+            margin-top: 30px;
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .plate-header { font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .plate-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            min-height: 50px;
+        }
+        .plate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        
+        .plate-item-details { display: flex; flex-direction: column; }
+        .plate-item-name { font-size: 0.9rem; font-weight: 600; }
+        .plate-item-portion { font-size: 0.75rem; color: #6b7280; margin-top: 2px; }
+        
+        .plate-item-remove {
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 1.4rem;
+            padding: 0 10px;
+            line-height: 1;
+        }
+
+        /* PART 2 FOOTER */
+        .footer-instruction {
+            margin-top: 40px;
+            background: #fffbeb; /* Light Yellow */
+            border-left: 5px solid #f59e0b;
+            padding: 20px;
+            border-radius: 4px;
+            color: #78350f;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* --- PORTION MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            backdrop-filter: blur(2px);
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .modal {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            transform: scale(0.9);
+            transition: transform 0.2s;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .modal-overlay.active .modal { transform: scale(1); }
+        
+        .modal-header-emoji { font-size: 3rem; margin-bottom: 5px; display: block; }
+        .modal h2 { margin: 0 0 15px 0; font-size: 1.4rem; color: var(--text); }
+        
+        /* Size Selector */
+        .size-selector {
+            display: flex;
+            background: #f3f4f6;
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap; 
+        }
+        .size-btn {
+            flex: 1;
+            padding: 10px 5px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            min-width: 30%; /* Ensure decent tap target on wrap */
+        }
+        .size-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Quantity Stepper */
+        .qty-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .qty-btn {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: white;
+            font-size: 1.2rem;
+            color: var(--text);
+            cursor: pointer;
+            display: flex; 
+            align-items: center; justify-content: center;
+        }
+        .qty-val { font-size: 1.5rem; font-weight: 700; width: 40px; }
+
+        .modal-footer { display: flex; gap: 10px; }
+        .btn-cancel {
+            flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border);
+            background: white; color: var(--text); font-weight: 600; cursor: pointer;
+        }
+        .btn-add {
+            flex: 2; padding: 12px; border-radius: 10px; border: none;
+            background: var(--primary); color: white; font-weight: 600; cursor: pointer;
+        }
+        .btn-add:hover { background: var(--primary-dark); }
+
+        /* WIN MODAL SPECIFICS */
+        .win-content { display: none; }
+        .win-active .portion-content { display: none; }
+        .win-active .win-content { display: block; }
+        
+        /* SETUP MODAL SPECIFICS */
+        .setup-content { display: none; }
+        .setup-active .portion-content { display: none; }
+        .setup-active .setup-content { display: block; }
+        .input-goal { font-size: 1.5rem; padding: 10px; width: 100px; text-align: center; border: 2px solid var(--border); border-radius: 8px; margin: 10px 0; }
+
+    </style>
+</head>
+<body>
+
+    <!-- INSTRUCTIONS (TOP) -->
+    <div class="instruction-box">
+        <span class="instruction-title">Instructions</span>
+        You should have already calculated your daily protein requirements based on your weight and activity level.
+        <br><br>
+        <strong>Your Goal:</strong> Build a daily meal plan that meets <strong>YOUR personal protein target</strong>. Select foods, choose portion sizes, and see if you can hit your number!
+    </div>
+
+    <!-- HEADER / DASHBOARD -->
+    <div class="dashboard">
+        <div class="header-flex">
+            <div>
+                <h1>The Protein Challenge</h1>
+                <div class="subtitle">My Goal: <span id="goal-label">--</span>g <span class="edit-goal" onclick="openSetup()">edit</span></div>
+            </div>
+            
+            <!-- SVG Progress Circle -->
+            <div class="progress-container">
+                <svg class="progress-ring" width="80" height="80">
+                    <circle class="progress-ring__circle-bg" stroke="#e5e7eb" stroke-width="6" fill="transparent" r="32" cx="40" cy="40"/>
+                    <circle class="progress-ring__circle" stroke="#4f46e5" stroke-width="6" fill="transparent" r="32" cx="40" cy="40" stroke-dasharray="200.96" stroke-dashoffset="200.96"/>
+                </svg>
+                <div class="score-display">
+                    <div class="score-val" id="current-score">0</div>
+                    <div class="score-label">/ <span id="ring-goal">--</span>g</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-area">
+        
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="filterFoods('all')">All Foods</button>
+            <button class="tab-btn" onclick="filterFoods('breakfast')">Breakfast</button>
+            <button class="tab-btn" onclick="filterFoods('lunch')">Lunch</button>
+            <button class="tab-btn" onclick="filterFoods('dinner')">Dinner</button>
+            <button class="tab-btn" onclick="filterFoods('snack')">Snacks</button>
+        </div>
+
+        <!-- FOOD GRID -->
+        <div class="food-grid" id="food-grid">
+            <!-- Populated by JS -->
+        </div>
+
+        <!-- MY PLATE -->
+        <div class="plate-section">
+            <div class="plate-header">
+                <span>My Daily Menu</span>
+                <span style="font-size: 0.8rem; color: #ef4444; cursor: pointer;" onclick="resetGame()">Clear All</span>
+            </div>
+            <ul class="plate-list" id="plate-list">
+                <li style="text-align:center; color: #9ca3af; padding: 15px; font-size: 0.9rem;" id="empty-msg">Tap foods above to add them!</li>
+            </ul>
+        </div>
+
+        <!-- INSTRUCTIONS (BOTTOM - PART 2) -->
+        <div class="footer-instruction">
+            <span class="instruction-title">Part 2: Label Detective</span>
+            Now, go to your kitchen and check the nutrition labels on 3 items (e.g., yogurt, bread, pasta).
+            <ul>
+                <li>Look for "Protein per 100g" or "Per serving <strong>in g</strong>".</li>
+                <li>Which food sources provided the biggest boost in this game? (Meat? Dairy? Pulses?)</li>
+                <li>Did you know that mixing plant proteins (like rice and beans) creates a "complete" protein?</li>
+            </ul>
+        </div>
+
+        <div style="height: 60px;"></div>
+    </div>
+
+    <!-- MODAL SYSTEM -->
+    <div class="modal-overlay active" id="portion-modal"> <!-- Active by default for setup -->
+        <div class="modal setup-active" id="modal-inner">
+            
+            <!-- SETUP CONTENT (First Screen) -->
+            <div class="setup-content">
+                <span class="modal-header-emoji">🎯</span>
+                <h2>Set Your Target</h2>
+                <p style="color:#6b7280; font-size: 0.9rem; margin-bottom:15px;">
+                    Enter the daily protein requirement you calculated earlier:
+                </p>
+                <input type="number" id="user-goal-input" class="input-goal" placeholder="50">
+                <div style="font-weight:600; color:var(--text); margin-bottom:20px;">grams</div>
+                
+                <button class="btn-add" style="width:100%" onclick="saveGoal()">Start Challenge</button>
+            </div>
+
+            <!-- PORTION CONTENT -->
+            <div class="portion-content">
+                <span class="modal-header-emoji" id="p-emoji">🍞</span>
+                <h2 id="p-name">Wholemeal Toast</h2>
+                
+                <div style="margin-bottom:10px; font-size:0.9rem; color:#6b7280;">Select Size:</div>
+                <div class="size-selector" id="size-options">
+                    <!-- Injected via JS -->
+                </div>
+
+                <div style="margin-bottom:10px; font-size:0.9rem; color:#6b7280;">Quantity:</div>
+                <div class="qty-control">
+                    <button class="qty-btn" onclick="changeQty(-1)">-</button>
+                    <span class="qty-val" id="p-qty">1</span>
+                    <button class="qty-btn" onclick="changeQty(1)">+</button>
+                </div>
+                
+                <div style="margin-bottom: 20px; font-weight:600; color:var(--primary);">
+                    Protein to add: <span id="p-calc-fibre">0</span>g
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                    <button class="btn-add" onclick="confirmAdd()">Add to Menu</button>
+                </div>
+            </div>
+
+            <!-- WIN CONTENT -->
+            <div class="win-content">
+                <span class="modal-header-emoji">💪</span>
+                <h2>Target Hit!</h2>
+                <p style="color:#6b7280; margin-bottom:20px;">
+                    You've reached your goal of <strong style="color:var(--text);"><span id="win-score">50</span>g</strong> of protein!
+                </p>
+                <button class="btn-add" style="width:100%" onclick="resetGame()">Start New Day</button>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    // --- DATABASE: PROTEIN FOCUSED (Updated) ---
+    const foodDB = [
+        // --- BREAKFAST ---
+        { 
+            id: 1, name: "Boiled/Poached Egg", category: "breakfast", emoji: "🥚",
+            sizes: [ 
+                { label: "1 Medium Egg (53g)", fibre: 6.0 }, 
+                { label: "1 Large Egg (63g)", fibre: 7.0 }
+            ]
+        },
+        { 
+            id: 40, name: "Semi-Skimmed Milk (Glass)", category: "breakfast", emoji: "🥛",
+            sizes: [ 
+                { label: "Small (150ml)", fibre: 5.3 }, 
+                { label: "Medium (200ml)", fibre: 7.0 },
+                { label: "Large (250ml)", fibre: 8.8 } 
+            ]
+        },
+        { 
+            id: 60, name: "Soy Milk (Glass)", category: "breakfast", emoji: "🥛",
+            sizes: [ 
+                { label: "Small (150ml)", fibre: 5.0 }, 
+                { label: "Medium (200ml)", fibre: 6.6 },
+                { label: "Large (250ml)", fibre: 8.3 } 
+            ]
+        },
+        { 
+            id: 62, name: "Oat Milk (Glass)", category: "breakfast", emoji: "🥛",
+            sizes: [ 
+                { label: "Small (150ml)", fibre: 1.5 }, 
+                { label: "Medium (200ml)", fibre: 2.0 },
+                { label: "Large (250ml)", fibre: 2.5 } 
+            ]
+        },
+        { 
+            id: 2, name: "Greek Yogurt", category: "breakfast", emoji: "🥣",
+            sizes: [ 
+                { label: "Small Pot (100g)", fibre: 10.0 }, 
+                { label: "Large Bowl (200g)", fibre: 20.0 } 
+            ]
+        },
+        { 
+            id: 3, name: "Oat Porridge (Oats)", category: "breakfast", emoji: "🥣",
+            sizes: [ 
+                { label: "Small (30g)", fibre: 3.5 }, 
+                { label: "Medium (40g)", fibre: 4.6 },
+                { label: "Large (50g)", fibre: 5.8 } 
+            ]
+        },
+        { 
+            id: 4, name: "Toast (Wholemeal)", category: "breakfast", emoji: "🍞",
+            sizes: [ 
+                { label: "1 Slice (40g)", fibre: 4.0 }, 
+                { label: "2 Slices (80g)", fibre: 8.0 } 
+            ]
+        },
+        { 
+            id: 5, name: "Bacon", category: "breakfast", emoji: "🥓",
+            sizes: [ 
+                { label: "1 Rasher (25g)", fibre: 3.0 }, 
+                { label: "2 Rashers (50g)", fibre: 6.0 }
+            ]
+        },
+        {
+            id: 43, name: "Chia Seeds", category: "breakfast", emoji: "🌱",
+            sizes: [ 
+                { label: "1 tbsp", fibre: 2.0 },
+                { label: "1 oz (approx 2 tbsp)", fibre: 5.0 } 
+            ]
+        },
+        {
+            id: 44, name: "Hemp Seeds", category: "breakfast", emoji: "🌱",
+            sizes: [ 
+                { label: "1 tbsp", fibre: 3.0 },
+                { label: "2 tbsp", fibre: 6.0 } 
+            ]
+        },
+        {
+            id: 7, name: "Peanut Butter (Unsweetened)", category: "breakfast", emoji: "🥜",
+            sizes: [ 
+                { label: "1 tbsp (15g)", fibre: 4.0 }, 
+                { label: "2 tbsp (30g)", fibre: 8.0 } 
+            ]
+        },
+        {
+            id: 64, name: "Avocado", category: "breakfast", emoji: "🥑",
+            sizes: [ 
+                { label: "1/2 Medium", fibre: 2.0 },
+                { label: "1 Medium", fibre: 4.0 } 
+            ]
+        },
+
+        // --- LUNCH ---
+        { 
+            id: 9, name: "Chicken Breast", category: "lunch", emoji: "🍗",
+            sizes: [ 
+                { label: "Small Fillet (100g cooked)", fibre: 31.0 }, 
+                { label: "Large Fillet (150g cooked)", fibre: 46.0 } 
+            ]
+        },
+        { 
+            id: 45, name: "Edamame", category: "lunch", emoji: "🫛",
+            sizes: [ 
+                { label: "Half Cup (Shelled)", fibre: 8.5 },
+                { label: "1 Cup (Shelled)", fibre: 17.0 } 
+            ]
+        },
+        { 
+            id: 63, name: "Baked Beans", category: "lunch", emoji: "🥫",
+            sizes: [ 
+                { label: "1/4 Can", fibre: 5.0 },
+                { label: "1/2 Can", fibre: 10.0 },
+                { label: "Full Can (400g)", fibre: 19.0 } 
+            ]
+        },
+        { 
+            id: 10, name: "Tuna Sandwich", category: "lunch", emoji: "🥪",
+            sizes: [ 
+                { label: "Half Sandwich (60g tuna + 1 slice bread)", fibre: 16.0 }, 
+                { label: "Full Round (120g tuna + 2 slices bread)", fibre: 32.0 } 
+            ]
+        },
+        { 
+            id: 54, name: "Tuna (Canned)", category: "lunch", emoji: "🐟", 
+            sizes: [ 
+                { label: "1 Small Tin (110g)", fibre: 27.0 },
+                { label: "Large Tin (145g)", fibre: 35.0 }
+            ] 
+        },
+        { 
+            id: 53, name: "Smoked Mackerel", category: "lunch", emoji: "🐟", 
+            sizes: [ 
+                { label: "1 Fillet (75g)", fibre: 14.0 },
+                { label: "2 Fillets (150g)", fibre: 28.0 }
+            ] 
+        },
+        { 
+            id: 11, name: "Cheddar Cheese", category: "lunch", emoji: "🧀",
+            sizes: [ 
+                { label: "Matchbox Size (30g)", fibre: 7.5 }, 
+                { label: "Sandwich Portion (50g)", fibre: 12.5 } 
+            ]
+        },
+        { 
+            id: 12, name: "Lentil Soup", category: "lunch", emoji: "🥣",
+            sizes: [ 
+                { label: "Small Cup (200ml)", fibre: 5.0 }, 
+                { label: "Large Bowl (400ml)", fibre: 9.0 } 
+            ]
+        },
+        {
+            id: 13, name: "Falafel Wrap", category: "lunch", emoji: "🌯",
+            sizes: [ 
+                { label: "Small (3 falafels + small wrap)", fibre: 10.0 }, 
+                { label: "Large (5 falafels + large wrap)", fibre: 15.0 } 
+            ]
+        },
+        {
+            id: 14, name: "Quinoa Salad", category: "lunch", emoji: "🥗",
+            sizes: [ 
+                { label: "Side Portion (80g cooked)", fibre: 4.0 }, 
+                { label: "Main Bowl (1 Cup Cooked)", fibre: 8.0 } 
+            ]
+        },
+        {
+            id: 15, name: "Jacket Potato", category: "lunch", emoji: "🥔",
+            sizes: [ 
+                { label: "Small (150g)", fibre: 3.0 }, 
+                { label: "Large (300g)", fibre: 6.0 } 
+            ]
+        },
+        { 
+            id: 50, name: "Rice (White)", category: "lunch", emoji: "🍚",
+            sizes: [ 
+                { label: "Small (150g cooked)", fibre: 4.0 }, 
+                { label: "Large (250g cooked)", fibre: 6.5 } 
+            ]
+        },
+
+        // --- DINNER ---
+        { 
+            id: 17, name: "Salmon Fillet", category: "dinner", emoji: "🐟",
+            sizes: [ 
+                { label: "Small Fillet (100g)", fibre: 20.0 }, 
+                { label: "Large Fillet (150g)", fibre: 30.0 } 
+            ]
+        },
+        { 
+            id: 51, name: "Cod Fillet", category: "dinner", emoji: "🐟", 
+            sizes: [ 
+                { label: "Small Fillet (120g)", fibre: 21.0 },
+                { label: "Large Fillet (160g)", fibre: 28.0 }
+            ] 
+        },
+        { 
+            id: 52, name: "Prawns (Cooked)", category: "dinner", emoji: "🍤", 
+            sizes: [ 
+                { label: "Handful (60g)", fibre: 14.0 },
+                { label: "Main Portion (100g)", fibre: 24.0 } 
+            ] 
+        },
+        { 
+            id: 46, name: "Seitan", category: "dinner", emoji: "🌾",
+            sizes: [ 
+                { label: "3 oz Portion", fibre: 20.0 },
+                { label: "6 oz Portion", fibre: 40.0 } 
+            ]
+        },
+        { 
+            id: 18, name: "Steak (Beef)", category: "dinner", emoji: "🥩",
+            sizes: [ 
+                { label: "Small Steak (Cooked)", fibre: 35.0 }, 
+                { label: "Large Steak (Cooked)", fibre: 45.0 } 
+            ]
+        },
+        { 
+            id: 19, name: "Tofu Stir Fry", category: "dinner", emoji: "🍲",
+            sizes: [ 
+                { label: "Small (100g tofu + veg)", fibre: 10.0 }, 
+                { label: "Large (200g tofu + veg)", fibre: 18.0 } 
+            ]
+        },
+        { 
+            id: 20, name: "Spaghetti Bolognese", category: "dinner", emoji: "🍝",
+            sizes: [ 
+                { label: "Small Portion (300g total)", fibre: 18.0 }, 
+                { label: "Large Portion (500g total)", fibre: 30.0 } 
+            ]
+        },
+        {
+            id: 22, name: "Chickpea Curry", category: "dinner", emoji: "🍛",
+            sizes: [ 
+                { label: "Small Bowl (200g)", fibre: 6.0 }, 
+                { label: "Large Bowl (350g)", fibre: 12.0 }
+            ]
+        },
+        {
+            id: 61, name: "Lentils (Cooked)", category: "dinner", emoji: "🫘",
+            sizes: [ 
+                { label: "Side Portion (100g)", fibre: 9.0 }, 
+                { label: "Main Portion (200g)", fibre: 18.0 } 
+            ]
+        },
+        {
+            id: 23, name: "Plain Pasta (Cooked)", category: "dinner", emoji: "🍝",
+            sizes: [ 
+                { label: "Small Bowl (150g cooked)", fibre: 5.0 }, 
+                { label: "Large Bowl (300g cooked)", fibre: 9.0 } 
+            ]
+        },
+        {
+            id: 48, name: "Quinoa (Cooked)", category: "dinner", emoji: "🌾",
+            sizes: [ 
+                { label: "Side (100g)", fibre: 4.4 }, 
+                { label: "Bowl (200g)", fibre: 8.8 } 
+            ]
+        },
+        {
+            id: 65, name: "Peas (Green)", category: "dinner", emoji: "🫛", 
+            sizes: [ 
+                { label: "Side Serving (80g)", fibre: 4.0 }, 
+                { label: "Cup (150g)", fibre: 7.5 } 
+            ] 
+        },
+        {
+            id: 58, name: "Spinach", category: "dinner", emoji: "🍃", 
+            sizes: [ 
+                { label: "Raw Handful (40g)", fibre: 1.0 }, 
+                { label: "Cooked Portion (100g)", fibre: 3.5 } 
+            ] 
+        },
+        {
+            id: 36, name: "Broccoli", category: "dinner", emoji: "🥦",
+            sizes: [ 
+                { label: "Side Portion (80g)", fibre: 3.0 } 
+            ]
+        },
+
+        // --- SNACKS ---
+        { 
+            id: 59, name: "Vanilla Protein Shake", category: "snack", emoji: "🥤", 
+            sizes: [ 
+                { label: "150ml", fibre: 15.0 }, 
+                { label: "200ml", fibre: 20.0 },
+                { label: "250ml", fibre: 25.0 } 
+            ] 
+        },
+        { 
+            id: 24, name: "Almonds", category: "snack", emoji: "🌰",
+            sizes: [ 
+                { label: "Small Handful (30g)", fibre: 6.0 }, 
+                { label: "Large Handful (50g)", fibre: 10.0 } 
+            ]
+        },
+        { 
+            id: 55, name: "Peanuts", category: "snack", emoji: "🥜", 
+            sizes: [ 
+                { label: "Handful (30g)", fibre: 8.0 },
+                { label: "Large Portion (50g)", fibre: 13.0 }
+            ] 
+        },
+        { 
+            id: 56, name: "Pistachios", category: "snack", emoji: "🥜", 
+            sizes: [ 
+                { label: "Handful (30g shelled)", fibre: 6.0 },
+                { label: "Large Portion (50g shelled)", fibre: 10.0 }
+            ] 
+        },
+        { 
+            id: 47, name: "Sunflower Seeds", category: "snack", emoji: "🌻",
+            sizes: [ 
+                { label: "1/4 Cup", fibre: 7.5 },
+                { label: "1/2 Cup", fibre: 15.0 } 
+            ]
+        },
+        { 
+            id: 57, name: "Pumpkin Seeds", category: "snack", emoji: "🎃", 
+            sizes: [ 
+                { label: "1 tbsp (10g)", fibre: 3.0 }, 
+                { label: "Handful (30g)", fibre: 9.0 } 
+            ] 
+        },
+        { 
+            id: 25, name: "Apple", category: "snack", emoji: "🍎",
+            sizes: [ 
+                { label: "1 Medium Apple (150g)", fibre: 0.5 } 
+            ]
+        },
+        { 
+            id: 26, name: "Protein Bar", category: "snack", emoji: "🍫",
+            sizes: [ 
+                { label: "Standard Bar (50g)", fibre: 20.0 } 
+            ]
+        },
+        { 
+            id: 28, name: "Hummus & Veg", category: "snack", emoji: "🥕",
+            sizes: [ 
+                { label: "Small Pot (50g hummus)", fibre: 5.0 } 
+            ]
+        },
+        {
+            id: 30, name: "Crisps", category: "snack", emoji: "🥔",
+            sizes: [ 
+                { label: "Standard Packet (30g)", fibre: 1.5 } 
+            ]
+        },
+    ];
+
+    // STATE VARIABLES
+    let currentVal = 0;
+    let targetVal = 50; // Default, user changes this
+    let addedFoods = []; 
+
+    // MODAL STATE
+    let selectedFoodId = null;
+    let selectedSizeIndex = 0;
+    let selectedQty = 1;
+
+    // DOM ELEMENTS
+    const grid = document.getElementById('food-grid');
+    const plateList = document.getElementById('plate-list');
+    const scoreDisplay = document.getElementById('current-score');
+    const circle = document.querySelector('.progress-ring__circle');
+    const emptyMsg = document.getElementById('empty-msg');
+    const modalOverlay = document.getElementById('portion-modal');
+    const modalInner = document.getElementById('modal-inner');
+
+    // PROGRESS RING SETUP
+    const radius = circle.r.baseVal.value;
+    const circumference = radius * 2 * Math.PI;
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+    circle.style.strokeDashoffset = circumference;
+
+    function setProgress(percent) {
+        const offset = circumference - (percent / 100) * circumference;
+        circle.style.strokeDashoffset = offset;
+    }
+
+    // --- SETUP LOGIC ---
+    function openSetup() {
+        modalInner.classList.remove('win-active');
+        modalInner.classList.remove('portion-active');
+        modalInner.classList.add('setup-active');
+        modalOverlay.classList.add('active');
+    }
+
+    function saveGoal() {
+        const input = document.getElementById('user-goal-input').value;
+        if(input && input > 0) {
+            targetVal = parseFloat(input);
+            document.getElementById('goal-label').innerText = targetVal;
+            document.getElementById('ring-goal').innerText = targetVal;
+            updateUI(); // Refresh ring
+            modalOverlay.classList.remove('active');
+        } else {
+            alert("Please enter a valid protein target (e.g. 50)");
+        }
+    }
+
+    // --- RENDER GRID ---
+    function renderFoods(filter = 'all') {
+        grid.innerHTML = '';
+        const foodsToShow = filter === 'all' 
+            ? foodDB 
+            : foodDB.filter(f => f.category === filter);
+
+        foodsToShow.forEach(food => {
+            const card = document.createElement('div');
+            card.className = `food-card`;
+            card.innerHTML = `
+                <span class="food-emoji">${food.emoji}</span>
+                <span class="food-name">${food.name}</span>
+                <span class="tap-hint">Tap to add</span>
+            `;
+            card.onclick = () => openModal(food.id);
+            grid.appendChild(card);
+        });
+    }
+
+    // TAB FILTER LOGIC
+    function filterFoods(category) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        renderFoods(category);
+    }
+
+    // --- MODAL LOGIC (PORTION) ---
+    function openModal(id) {
+        const food = foodDB.find(f => f.id === id);
+        selectedFoodId = id;
+        selectedSizeIndex = 0; // default to first size
+        selectedQty = 1;
+
+        // Populate Modal Info
+        document.getElementById('p-emoji').innerText = food.emoji;
+        document.getElementById('p-name').innerText = food.name;
+        document.getElementById('p-qty').innerText = "1";
+
+        // Generate Size Buttons
+        const sizeContainer = document.getElementById('size-options');
+        sizeContainer.innerHTML = '';
+        
+        food.sizes.forEach((size, index) => {
+            const btn = document.createElement('button');
+            btn.className = `size-btn ${index === 0 ? 'active' : ''}`;
+            btn.innerText = size.label;
+            btn.onclick = () => selectSize(index, btn);
+            sizeContainer.appendChild(btn);
+        });
+
+        // Ensure we are in "Portion" mode
+        modalInner.className = 'modal'; // Reset classes
+        modalInner.classList.add('portion-active'); // Default view
+        
+        updateCalc();
+        modalOverlay.classList.add('active');
+    }
+
+    function selectSize(index, btnElem) {
+        selectedSizeIndex = index;
+        // Update visual state of buttons
+        document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+        btnElem.classList.add('active');
+        updateCalc();
+    }
+
+    function changeQty(delta) {
+        let newQty = selectedQty + delta;
+        if (newQty < 1) newQty = 1;
+        if (newQty > 10) newQty = 10;
+        selectedQty = newQty;
+        document.getElementById('p-qty').innerText = selectedQty;
+        updateCalc();
+    }
+
+    function updateCalc() {
+        const food = foodDB.find(f => f.id === selectedFoodId);
+        const fibrePerItem = food.sizes[selectedSizeIndex].fibre;
+        const total = (fibrePerItem * selectedQty).toFixed(1);
+        document.getElementById('p-calc-fibre').innerText = total;
+    }
+
+    function closeModal() {
+        modalOverlay.classList.remove('active');
+    }
+
+    // --- ADDING TO PLATE ---
+    function confirmAdd() {
+        const food = foodDB.find(f => f.id === selectedFoodId);
+        const sizeObj = food.sizes[selectedSizeIndex];
+        const fibreTotal = parseFloat((sizeObj.fibre * selectedQty).toFixed(1));
+
+        // Create display string (e.g., "2 x Small Bowl")
+        let portionLabel = sizeObj.label;
+        if (selectedQty > 1) {
+            portionLabel = `${selectedQty} x ${sizeObj.label}`;
+        }
+
+        // Add to data
+        addedFoods.push({
+            name: food.name,
+            emoji: food.emoji,
+            label: portionLabel,
+            fibre: fibreTotal
+        });
+
+        currentVal += fibreTotal;
+        
+        closeModal();
+        updateUI();
+        checkWin();
+    }
+
+    function removeFood(index) {
+        currentVal -= addedFoods[index].fibre;
+        addedFoods.splice(index, 1);
+        updateUI();
+    }
+
+    function updateUI() {
+        // Score
+        scoreDisplay.innerText = Math.max(0, currentVal).toFixed(1);
+        let percent = (currentVal / targetVal) * 100;
+        if (percent > 100) percent = 100;
+        setProgress(percent);
+        
+        if(currentVal >= targetVal) {
+            circle.style.stroke = "#f59e0b"; // Winner color
+        } else {
+            circle.style.stroke = "#4f46e5"; // Primary color
+        }
+
+        // Plate
+        plateList.innerHTML = '';
+        if (addedFoods.length === 0) {
+            plateList.appendChild(emptyMsg);
+            return;
+        }
+
+        addedFoods.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.className = 'plate-item';
+            li.innerHTML = `
+                <div class="plate-item-details">
+                    <span class="plate-item-name">${item.emoji} ${item.name}</span>
+                    <span class="plate-item-portion">${item.label}</span>
+                </div>
+                <div style="display:flex; align-items:center;">
+                    <strong style="font-size:0.9rem; color:var(--primary); margin-right:10px;">+${item.fibre}g</strong>
+                    <span class="plate-item-remove" onclick="removeFood(${index})">&times;</span>
+                </div>
+            `;
+            plateList.appendChild(li);
+        });
+        
+        // Scroll to bottom of plate
+        plateList.scrollTop = plateList.scrollHeight;
+    }
+
+    function checkWin() {
+        if (currentVal >= targetVal) {
+            setTimeout(() => {
+                document.getElementById('win-score').innerText = currentVal.toFixed(1);
+                modalInner.className = 'modal win-active';
+                modalOverlay.classList.add('active');
+            }, 600);
+        }
+    }
+
+    function resetGame() {
+        currentVal = 0;
+        addedFoods = [];
+        closeModal();
+        openSetup(); // Ask for goal again or allow them to keep it
+        updateUI();
+    }
+
+    // Init
+    renderFoods();
+
+</script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>
